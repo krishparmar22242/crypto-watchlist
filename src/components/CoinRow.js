@@ -23,7 +23,9 @@ function CoinRow({ coin, isFavorite, onPress, onToggleFavorite }) {
           <Text numberOfLines={1} style={styles.name}>
             {coin.name}
           </Text>
-          <Text style={styles.symbol}>{coin.symbol.toUpperCase()}</Text>
+          <Text style={styles.symbol}>
+            {coin.symbol ? coin.symbol.toUpperCase() : 'N/A'}
+          </Text>
         </View>
         <View style={styles.numbers}>
           <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
