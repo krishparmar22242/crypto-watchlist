@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -30,20 +32,26 @@ function getErrorMessage(error) {
 
 export default function ListScreen() {
   const [coins, setCoins] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const isMountedRef = useRef(true);
   const requestRef = useRef(null);
 
-  const loadCoins = useCallback(async () => {
+  const loadCoins = useCallback(async ({ refresh = false } = {}) => {
     if (requestRef.current) {
       requestRef.current.abort();
     }
 
     const controller = new AbortController();
     requestRef.current = controller;
-    setIsLoading(true);
+    if (refresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -62,6 +70,7 @@ export default function ListScreen() {
     } finally {
       if (isMountedRef.current && requestRef.current === controller) {
         setIsLoading(false);
+        setIsRefreshing(false);
         requestRef.current = null;
       }
     }
@@ -77,6 +86,26 @@ export default function ListScreen() {
         requestRef.current.abort();
       }
     };
+  }, [loadCoins]);
+
+  const filteredCoins = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return coins;
+    }
+    return coins.filter((coin) => {
+      const name = String(coin.name ?? '').toLowerCase();
+      const symbol = String(coin.symbol ?? '').toLowerCase();
+      return name.includes(query) || symbol.includes(query);
+    });
+  }, [coins, searchQuery]);
+
+  const handleRetry = useCallback(() => {
+    loadCoins();
+  }, [loadCoins]);
+
+  const handleRefresh = useCallback(() => {
+    loadCoins({ refresh: true });
   }, [loadCoins]);
 
   const renderItem = useCallback(({ item }) => <CoinRow coin={item} />, []);
@@ -96,7 +125,7 @@ export default function ListScreen() {
         <Text style={styles.errorTitle}>Could not load prices</Text>
         <Text style={styles.errorMessage}>{error}</Text>
         <Pressable
-          onPress={loadCoins}
+          onPress={handleRetry}
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.retryButton,
@@ -111,11 +140,37 @@ export default function ListScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.controls}>
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search by name or symbol"
+          placeholderTextColor="#9CA3AF"
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          accessibilityLabel="Search coins"
+          style={styles.searchInput}
+        />
+      </View>
       <FlatList
-        data={coins}
+        data={filteredCoins}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          filteredCoins.length === 0 && styles.emptyListContent,
+        ]}
+        ListEmptyComponent={<Text style={styles.emptyText}>No coins found</Text>}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={['#2563EB']}
+            tintColor="#2563EB"
+          />
+        }
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );
@@ -167,7 +222,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  controls: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  searchInput: {
+    minHeight: 48,
+    paddingHorizontal: 14,
+    color: '#111827',
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 10,
+  },
   listContent: {
     padding: 16,
+  },
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  emptyText: {
+    color: '#6B7280',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
