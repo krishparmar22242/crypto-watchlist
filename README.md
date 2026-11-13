@@ -49,4 +49,22 @@ _Add screenshots of the list and detail screens here._
 - The free CoinGecko API has rate limits and may occasionally return HTTP 429.
 - There is no offline cache, so the app needs a network connection to load data.
 
-Tested on: (fill in)
+## Testing
+
+Text-based manual test record from **2026-11-13** using **Expo Go on a physical
+phone**. All seven checks passed.
+
+| # | Checklist item | Result |
+| --- | --- | --- |
+| 1 | App opens and shows 50 coins with prices | Pass |
+| 2 | Airplane mode shows an error with Retry; reconnecting and retrying loads the list | Pass |
+| 3 | Searching `bit` filters the list; `zzzz` shows “No coins found” | Pass |
+| 4 | Tapping a coin shows the details, and Back returns to the list | Pass |
+| 5 | Two starred coins remain starred after fully closing and reopening Expo Go | Pass |
+| 6 | Favorites-only shows only starred coins | Pass |
+| 7 | Positive 24h percentages are green and negative percentages are red | Pass |
+
+The favorites-only switch initially did not respond during on-device testing.
+Commit `136382d` restored its native `onValueChange` handler, and the retest
+passed. These were manual acceptance checks recorded as text; no automated UI
+test suite was used.
