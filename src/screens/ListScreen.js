@@ -5,6 +5,7 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -12,6 +13,7 @@ import {
 
 import { fetchMarkets } from '../api/coinGecko';
 import CoinRow from '../components/CoinRow';
+import { useFavorites } from '../context/FavoritesContext';
 
 function getErrorMessage(error) {
   switch (error?.type) {
@@ -33,10 +35,12 @@ function getErrorMessage(error) {
 export default function ListScreen() {
   const [coins, setCoins] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const isMountedRef = useRef(true);
   const requestRef = useRef(null);
 
@@ -88,17 +92,22 @@ export default function ListScreen() {
     };
   }, [loadCoins]);
 
+  const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+
   const filteredCoins = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      return coins;
-    }
     return coins.filter((coin) => {
+      if (favoritesOnly && !favoriteSet.has(coin.id)) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
       const name = String(coin.name ?? '').toLowerCase();
       const symbol = String(coin.symbol ?? '').toLowerCase();
       return name.includes(query) || symbol.includes(query);
     });
-  }, [coins, searchQuery]);
+  }, [coins, searchQuery, favoritesOnly, favoriteSet]);
 
   const handleRetry = useCallback(() => {
     loadCoins();
@@ -108,7 +117,17 @@ export default function ListScreen() {
     loadCoins({ refresh: true });
   }, [loadCoins]);
 
-  const renderItem = useCallback(({ item }) => <CoinRow coin={item} />, []);
+  // Stable callbacks let memoized rows skip renders when unrelated state changes.
+  const renderItem = useCallback(
+    ({ item }) => (
+      <CoinRow
+        coin={item}
+        isFavorite={favoriteSet.has(item.id)}
+        onToggleFavorite={toggleFavorite}
+      />
+    ),
+    [favoriteSet, toggleFavorite]
+  );
 
   if (isLoading) {
     return (
@@ -152,11 +171,22 @@ export default function ListScreen() {
           accessibilityLabel="Search coins"
           style={styles.searchInput}
         />
+        <View style={styles.favoritesToggle}>
+          <Text style={styles.favoritesLabel}>Favorites only</Text>
+          <Switch
+            value={favoritesOnly}
+            onValueChange={setFavoritesOnly}
+            accessibilityLabel="Show favorites only"
+            trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
+            thumbColor={favoritesOnly ? '#2563EB' : '#FFFFFF'}
+          />
+        </View>
       </View>
       <FlatList
         data={filteredCoins}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        extraData={favoriteIds}
         contentContainerStyle={[
           styles.listContent,
           filteredCoins.length === 0 && styles.emptyListContent,
@@ -236,6 +266,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 10,
+  },
+  favoritesToggle: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  favoritesLabel: {
+    color: '#374151',
+    fontSize: 16,
+    fontWeight: '500',
   },
   listContent: {
     padding: 16,

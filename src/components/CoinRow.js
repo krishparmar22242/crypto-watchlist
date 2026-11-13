@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-function CoinRow({ coin }) {
+function CoinRow({ coin, isFavorite, onToggleFavorite }) {
   const change = coin.price_change_percentage_24h;
   const changeColor = change >= 0 ? '#15803D' : '#DC2626';
   const changeLabel =
@@ -11,19 +11,39 @@ function CoinRow({ coin }) {
 
   return (
     <View style={styles.row}>
-      <Image source={{ uri: coin.image }} style={styles.image} />
-      <View style={styles.info}>
-        <Text numberOfLines={1} style={styles.name}>
-          {coin.name}
-        </Text>
-        <Text style={styles.symbol}>{coin.symbol.toUpperCase()}</Text>
+      <View style={styles.main}>
+        <Image source={{ uri: coin.image }} style={styles.image} />
+        <View style={styles.info}>
+          <Text numberOfLines={1} style={styles.name}>
+            {coin.name}
+          </Text>
+          <Text style={styles.symbol}>{coin.symbol.toUpperCase()}</Text>
+        </View>
+        <View style={styles.numbers}>
+          <Text style={styles.price}>${coin.current_price.toFixed(2)}</Text>
+          <Text style={[styles.change, { color: changeColor }]}>
+            {changeLabel}
+          </Text>
+        </View>
       </View>
-      <View style={styles.numbers}>
-        <Text style={styles.price}>${coin.current_price.toFixed(2)}</Text>
-        <Text style={[styles.change, { color: changeColor }]}>
-          {changeLabel}
+      <Pressable
+        onPress={() => onToggleFavorite(coin.id)}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isFavorite
+            ? `Remove ${coin.name} from favorites`
+            : `Add ${coin.name} to favorites`
+        }
+        accessibilityState={{ selected: isFavorite }}
+        style={({ pressed }) => [
+          styles.starButton,
+          pressed && styles.starButtonPressed,
+        ]}
+      >
+        <Text style={[styles.star, isFavorite && styles.starActive]}>
+          {isFavorite ? '★' : '☆'}
         </Text>
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -36,10 +56,16 @@ const styles = StyleSheet.create({
     minHeight: 72,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingLeft: 12,
     marginBottom: 8,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
+  },
+  main: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   image: {
     width: 40,
@@ -75,5 +101,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 14,
     fontWeight: '600',
+  },
+  starButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  starButtonPressed: {
+    opacity: 0.5,
+  },
+  star: {
+    color: '#9CA3AF',
+    fontSize: 24,
+    lineHeight: 28,
+  },
+  starActive: {
+    color: '#F59E0B',
   },
 });

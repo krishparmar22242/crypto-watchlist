@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { FavoritesProvider } from './src/context/FavoritesContext';
 import ListScreen from './src/screens/ListScreen';
 
 const Stack = createNativeStackNavigator();
@@ -10,23 +11,25 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="dark" />
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: '#FFFFFF' },
-            headerTintColor: '#111827',
-            headerTitleStyle: { fontWeight: '700' },
-            contentStyle: { backgroundColor: '#F3F4F6' },
-          }}
-        >
-          <Stack.Screen
-            name="List"
-            component={ListScreen}
-            options={{ title: 'Crypto Watchlist' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <FavoritesProvider>
+        <NavigationContainer>
+          <StatusBar style="dark" />
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: { backgroundColor: '#FFFFFF' },
+              headerTintColor: '#111827',
+              headerTitleStyle: { fontWeight: '700' },
+              contentStyle: { backgroundColor: '#F3F4F6' },
+            }}
+          >
+            <Stack.Screen
+              name="List"
+              component={ListScreen}
+              options={{ title: 'Crypto Watchlist' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </FavoritesProvider>
     </SafeAreaProvider>
   );
 }
