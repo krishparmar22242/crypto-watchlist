@@ -1,14 +1,29 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { useFavorites } from '../context/FavoritesContext';
+import { formatCompact, formatPercent, formatPrice } from '../utils/format';
 
-function isValidNumber(value) {
-  return typeof value === 'number' && Number.isFinite(value);
+function formatCompactUsd(value) {
+  const formatted = formatCompact(value);
+  return formatted === 'N/A' ? formatted : `$${formatted}`;
 }
 
-function Stat({ label, value }) {
+function formatRank(value) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? `#${value}`
+    : 'N/A';
+}
+
+function Stat({ label, value, isLast = false }) {
   return (
-    <View style={styles.stat}>
+    <View style={[styles.stat, isLast && styles.statLast]}>
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={styles.statValue}>{value}</Text>
     </View>
@@ -29,8 +44,10 @@ export default function DetailScreen({ route }) {
 
   const isFavorite = favoriteIds.includes(coin.id);
   const change = coin.price_change_percentage_24h;
-  const changeColor =
-    isValidNumber(change) && change < 0 ? '#DC2626' : '#15803D';
+  let changeColor = '#6B7280';
+  if (typeof change === 'number' && Number.isFinite(change)) {
+    changeColor = change >= 0 ? '#15803D' : '#DC2626';
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -38,9 +55,11 @@ export default function DetailScreen({ route }) {
         <Image source={{ uri: coin.image }} style={styles.image} />
         <View style={styles.headerInfo}>
           <Text style={styles.name}>{coin.name}</Text>
-          <Text style={styles.symbol}>{coin.symbol?.toUpperCase() || 'N/A'}</Text>
+          <Text style={styles.symbol}>
+            {coin.symbol?.toUpperCase() || 'N/A'}
+          </Text>
           <Text style={styles.rank}>
-            Rank {isValidNumber(coin.market_cap_rank) ? `#${coin.market_cap_rank}` : 'N/A'}
+            Rank {formatRank(coin.market_cap_rank)}
           </Text>
         </View>
         <Pressable
@@ -63,48 +82,20 @@ export default function DetailScreen({ route }) {
 
       <View style={styles.priceCard}>
         <Text style={styles.priceLabel}>Current price</Text>
-        <Text style={styles.price}>
-          {isValidNumber(coin.current_price)
-            ? `$${coin.current_price.toFixed(2)}`
-            : 'N/A'}
-        </Text>
+        <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
         <Text style={[styles.change, { color: changeColor }]}>
-          {isValidNumber(change)
-            ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}% (24h)`
-            : 'N/A (24h)'}
+          {formatPercent(change)} (24h)
         </Text>
       </View>
 
       <View style={styles.statsCard}>
-        <Stat
-          label="Market cap"
-          value={
-            isValidNumber(coin.market_cap)
-              ? `$${coin.market_cap.toLocaleString('en-US')}`
-              : 'N/A'
-          }
-        />
-        <Stat
-          label="24h high"
-          value={
-            isValidNumber(coin.high_24h)
-              ? `$${coin.high_24h.toFixed(2)}`
-              : 'N/A'
-          }
-        />
-        <Stat
-          label="24h low"
-          value={
-            isValidNumber(coin.low_24h) ? `$${coin.low_24h.toFixed(2)}` : 'N/A'
-          }
-        />
+        <Stat label="Market cap" value={formatCompactUsd(coin.market_cap)} />
+        <Stat label="24h high" value={formatPrice(coin.high_24h)} />
+        <Stat label="24h low" value={formatPrice(coin.low_24h)} />
         <Stat
           label="24h volume"
-          value={
-            isValidNumber(coin.total_volume)
-              ? `$${coin.total_volume.toLocaleString('en-US')}`
-              : 'N/A'
-          }
+          value={formatCompactUsd(coin.total_volume)}
+          isLast
         />
       </View>
     </ScrollView>
@@ -212,6 +203,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E7EB',
+  },
+  statLast: {
+    borderBottomWidth: 0,
   },
   statLabel: {
     color: '#6B7280',

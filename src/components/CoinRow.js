@@ -1,13 +1,14 @@
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { formatPercent, formatPrice } from '../utils/format';
+
 function CoinRow({ coin, isFavorite, onPress, onToggleFavorite }) {
   const change = coin.price_change_percentage_24h;
-  const changeColor = change >= 0 ? '#15803D' : '#DC2626';
-  const changeLabel =
-    typeof change === 'number'
-      ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`
-      : 'N/A';
+  let changeColor = '#6B7280';
+  if (typeof change === 'number' && Number.isFinite(change)) {
+    changeColor = change >= 0 ? '#15803D' : '#DC2626';
+  }
 
   return (
     <View style={styles.row}>
@@ -25,9 +26,9 @@ function CoinRow({ coin, isFavorite, onPress, onToggleFavorite }) {
           <Text style={styles.symbol}>{coin.symbol.toUpperCase()}</Text>
         </View>
         <View style={styles.numbers}>
-          <Text style={styles.price}>${coin.current_price.toFixed(2)}</Text>
+          <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
           <Text style={[styles.change, { color: changeColor }]}>
-            {changeLabel}
+            {formatPercent(change)}
           </Text>
         </View>
       </Pressable>
