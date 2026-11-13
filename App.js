@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { FavoritesProvider } from './src/context/FavoritesContext';
+import DetailScreen from './src/screens/DetailScreen';
 import ListScreen from './src/screens/ListScreen';
 
 const Stack = createNativeStackNavigator();
@@ -26,6 +27,13 @@ export default function App() {
               name="List"
               component={ListScreen}
               options={{ title: 'Crypto Watchlist' }}
+            />
+            <Stack.Screen
+              name="Detail"
+              component={DetailScreen}
+              options={({ route }) => ({
+                title: route.params?.coin?.name ?? 'Coin details',
+              })}
             />
           </Stack.Navigator>
         </NavigationContainer>

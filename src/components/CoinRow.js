@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-function CoinRow({ coin, isFavorite, onToggleFavorite }) {
+function CoinRow({ coin, isFavorite, onPress, onToggleFavorite }) {
   const change = coin.price_change_percentage_24h;
   const changeColor = change >= 0 ? '#15803D' : '#DC2626';
   const changeLabel =
@@ -11,7 +11,12 @@ function CoinRow({ coin, isFavorite, onToggleFavorite }) {
 
   return (
     <View style={styles.row}>
-      <View style={styles.main}>
+      <Pressable
+        onPress={() => onPress(coin)}
+        accessibilityRole="button"
+        accessibilityLabel={`View ${coin.name} details`}
+        style={styles.main}
+      >
         <Image source={{ uri: coin.image }} style={styles.image} />
         <View style={styles.info}>
           <Text numberOfLines={1} style={styles.name}>
@@ -25,7 +30,7 @@ function CoinRow({ coin, isFavorite, onToggleFavorite }) {
             {changeLabel}
           </Text>
         </View>
-      </View>
+      </Pressable>
       <Pressable
         onPress={() => onToggleFavorite(coin.id)}
         accessibilityRole="button"

@@ -32,7 +32,7 @@ function getErrorMessage(error) {
   }
 }
 
-export default function ListScreen() {
+export default function ListScreen({ navigation }) {
   const [coins, setCoins] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -117,16 +117,24 @@ export default function ListScreen() {
     loadCoins({ refresh: true });
   }, [loadCoins]);
 
+  const handleCoinPress = useCallback(
+    (coin) => {
+      navigation.navigate('Detail', { coin });
+    },
+    [navigation]
+  );
+
   // Stable callbacks let memoized rows skip renders when unrelated state changes.
   const renderItem = useCallback(
     ({ item }) => (
       <CoinRow
         coin={item}
         isFavorite={favoriteSet.has(item.id)}
+        onPress={handleCoinPress}
         onToggleFavorite={toggleFavorite}
       />
     ),
-    [favoriteSet, toggleFavorite]
+    [favoriteSet, handleCoinPress, toggleFavorite]
   );
 
   if (isLoading) {
