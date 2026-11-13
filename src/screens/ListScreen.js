@@ -179,25 +179,17 @@ export default function ListScreen({ navigation }) {
           accessibilityLabel="Search coins"
           style={styles.searchInput}
         />
-        <Pressable
-          onPress={() => setFavoritesOnly((current) => !current)}
-          accessibilityRole="switch"
-          accessibilityLabel="Favorites only"
-          accessibilityState={{ checked: favoritesOnly }}
-          style={({ pressed }) => [
-            styles.favoritesToggle,
-            pressed && styles.favoritesTogglePressed,
-          ]}
-        >
+        <View style={styles.favoritesToggle}>
           <Text style={styles.favoritesLabel}>Favorites only</Text>
           <Switch
             value={favoritesOnly}
-            accessible={false}
-            pointerEvents="none"
+            onValueChange={setFavoritesOnly}
+            accessibilityLabel="Favorites only"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
             thumbColor={favoritesOnly ? '#2563EB' : '#FFFFFF'}
           />
-        </Pressable>
+        </View>
       </View>
       <FlatList
         data={filteredCoins}
@@ -290,9 +282,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 8,
-  },
-  favoritesTogglePressed: {
-    opacity: 0.7,
   },
   favoritesLabel: {
     color: '#374151',
